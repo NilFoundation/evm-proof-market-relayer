@@ -61,7 +61,7 @@ async function closeOrder(contract, relayer, order) {
         let response = await getAuthenticated(`${constants.serviceUrl}/proof/${proof_key}`);
         const proof = [response.data.proof];
         const price = ethers.utils.parseUnits(order.cost.toString(), 18);
-        return contract.connect(relayer).closeOrder(id, proof, price, {gasLimit: 30_500_000});
+        return contract.connect(relayer).closeOrder(id, proof, price);
     } catch (error) {
         console.error(`Error processing order ${order.eth_id}:`, error);
     }
@@ -92,7 +92,7 @@ async function relayProofs(contract, relayer) {
         const lastTimestamp = await getLastProcessedTimestamp('completed');
 
         const pattern = [
-            {"key":"sender", "value":pricess.env.USERNAME},
+            {"key":"sender", "value":process.env.USERNAME},
             {"key":"status", "value":"completed"},
             {"key":"updatedOn", "value":lastTimestamp, "op":">"}
         ];
@@ -173,11 +173,17 @@ function delay(ms) {
 async function main() {
     constants = readJSONFile('constants.json');
 
-    const [owner, user, producer, relayer] = await ethers.getSigners();
+    const [owner, relayer] = await ethers.getSigners();
     const addresses = JSON.parse(fs.readFileSync('deployed_addresses.json', 'utf-8'));
     const contractAddress = addresses.proofMarket;
-    const ProofMarketEndpoint = await ethers.getContractFactory("ProofMarketEndpoint");
-    const proofMarket = ProofMarketEndpoint.attach(contractAddress);
+    const provider = hre.ethers.provider;
+    const contractArtifact = await hre.artifacts.readArtifact('IProofMarketEndpoint');
+    if (!contractArtifact || !contractArtifact.abi) {
+        console.error('Failed to load contract artifact or ABI is missing');
+        process.exit(1);
+    }
+    const contractABI = contractArtifact.abi;
+    const proofMarket = new hre.ethers.Contract(contractAddress, contractABI, provider);
 
     while (true) {
         await relayProofs(proofMarket, relayer);
