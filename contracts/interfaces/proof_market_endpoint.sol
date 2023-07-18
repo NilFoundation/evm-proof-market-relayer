@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import { StatementLibrary } from "../libraries/statement_lib.sol";
 import { OrderLibrary } from "../libraries/order_lib.sol";
-import { Tools } from "../libraries/tools.sol";
 
 interface IProofMarketEndpoint {
     event OrderCreated(uint256 indexed id, OrderLibrary.OrderInput orderInput, address buyer);

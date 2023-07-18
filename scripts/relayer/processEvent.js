@@ -16,13 +16,14 @@ async function processOrderCreatedEvent(event) {
     let input;
     if (statement_key === '79169223') {
         input = {array:publicInputs[0]}
-        console.log('input', input)
     } else if (statement_key === '32292') {
-        const inputFile = path.join(__dirname, '../../test/data/mina_state_input.json');
-        let input = JSON.parse(fs.readFileSync(inputFile, 'utf-8'));
-        input = input.map((item) => item.split(',').map((item) => ethers.BigNumber.from(item)));
-        console.log('input', input)
+        // TODO: change this to an original public input
+        const inputFile = path.join(__dirname, '../../test/data/mina_state_pm_input.json');
+        input = JSON.parse(fs.readFileSync(inputFile, 'utf-8'));
+    } else {
+        console.error('Unknown statement key:', statement_key);
     }
+    console.log('input', input)
         
     const order = {
         cost: Number(hre.ethers.utils.formatUnits(price)),

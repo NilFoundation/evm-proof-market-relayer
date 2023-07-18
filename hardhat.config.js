@@ -21,6 +21,7 @@ module.exports = {
   networks: {
     hardhat: {
       blockGasLimit: 100_000_000,
+      timeout: 100000000
     },
     sepolia: {
       url: "https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}",

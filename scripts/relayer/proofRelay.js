@@ -46,10 +46,29 @@ async function saveLastProcessedTimestamp(status, timestamp) {
 }
 
 async function closeOrder(contract, relayer, order) {
-    try {
+    try{
         // TODO: relay statuses independently
         await setProducer(contract, relayer, order);
-        
+    } catch (error) {
+        if (error.message.includes("Order is not open")) {
+            console.log(`Order ${order.eth_id} is not open. Skipping...`);
+        } else {
+            console.error(`Error processing order ${order.eth_id}:`, error);
+        }
+    }
+    try {
+        let filePath;
+        if (order.statement_key === '79169223') {
+            filePath = path.join(__dirname, `../../test/data/mina_account/proof_account.bin`);
+        } else if (order.statement_key === '32292') {
+            filePath = path.join(__dirname, `../../test/data/mina_account/proof_state.bin`);
+        } else {
+            console.error(`Unknown statement key ${order.statement_key}`);
+            return;
+        }
+        filePath = path.join(__dirname, `../../test/data/mina_account/proof_account.bin`);
+        const proof = [fs.readFileSync(filePath, 'utf-8')];
+
         const id = parseInt(order.eth_id);
         const proof_key = order.proof_key;
 
@@ -57,11 +76,19 @@ async function closeOrder(contract, relayer, order) {
             throw new Error(`Invalid order ID: ${order.eth_id}`);
         }
 
-        console.log(`Closing order ${order.eth_id} with proof ${proof_key}...`)
-        let response = await getAuthenticated(`${constants.serviceUrl}/proof/${proof_key}`);
-        const proof = [response.data.proof];
+        // TODO: fetch original proof
+        // let response = await getAuthenticated(`${constants.serviceUrl}/proof/${proof_key}`);
+        console.log('Fetched proof');
+        // const proof = [response.data.proof];
         const price = ethers.utils.parseUnits(order.cost.toString(), 18);
-        return contract.connect(relayer).closeOrder(id, proof, price);
+        console.log('Closing order', id, 'with proof', proof_key, 'and price', price.toString(), '...');
+
+
+        return contract.connect(relayer).closeOrder(id, proof, price, {gasLimit: 30500000})
+        .catch((error) => {
+            console.error(`Failed to close order ${id} due to an error:`, error);
+            return;
+        });
     } catch (error) {
         console.error(`Error processing order ${order.eth_id}:`, error);
     }
