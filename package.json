@@ -1,10 +1,10 @@
 {
   "name": "proof-market-endpoint",
   "devDependencies": {
-    "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@nomiclabs/hardhat-ethers": "^2.2.2",
     "@openzeppelin/contracts": ">=4.7.2",
+    "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
     "hardhat": "^2.13.0",
@@ -14,6 +14,7 @@
   "dependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@openzeppelin/contracts": "^4.8.2",
-    "lossless-json": "^2.0.9"
+    "bigint-buffer": "^1.1.5",
+    "lossless-json": "^2.0.11"
   }
 }

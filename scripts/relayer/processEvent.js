@@ -4,22 +4,31 @@ const axios = require('axios');
 const hre = require('hardhat');
 const path = require('path');
 const fs = require('fs');
+const { convertFromUint256 } = require('../convert_public_input.js');
 
 const constants = JSON.parse(fs.readFileSync(path.join(__dirname, 'constants.json'), 'utf-8'));
+
+const examplePath = path.join(__dirname, '../data/example-mina-state.json');
+const minaStateExampleJson = JSON.parse(fs.readFileSync(examplePath, 'utf-8'));
 
 async function processOrderCreatedEvent(event) {
     const { statementId, publicInputs, price } = event.args.orderInput;
     const { id, buyer } = event.args;
-    console.log('Order created:', id, statementId, publicInputs, price, buyer);
+    console.log('Order created:', id, statementId, price, buyer);
 
     const statement_key = String(statementId);
     let input;
     if (statement_key === '79169223') {
-        input = {array:publicInputs[0]}
+        // Mina account path
+        input = [{array:publicInputs[0].map(item => BigInt(item))}];
     } else if (statement_key === '32292') {
-        // TODO: change this to an original public input
-        const inputFile = path.join(__dirname, '../../test/data/mina_state_pm_input.json');
-        input = JSON.parse(fs.readFileSync(inputFile, 'utf-8'));
+        // Mina state
+        input = publicInputs[0].map(item => BigInt(item));
+        input = [convertFromUint256(minaStateExampleJson, input)];
+    } else if (statement_key === '32326') {
+        // Unified addition
+        // TODO: extract 2 uints into desired format
+        console.log('unified addition input');
     } else {
         console.error('Unknown statement key:', statement_key);
     }
@@ -32,7 +41,7 @@ async function processOrderCreatedEvent(event) {
         eth_id: String(id),
     };
     console.log('Submitting order:', order);
-
+    return;
     try {
         const url = `${constants.serviceUrl}/request`;
         const response = await axios.post(url, order, {

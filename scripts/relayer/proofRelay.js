@@ -66,8 +66,8 @@ async function closeOrder(contract, relayer, order) {
             console.error(`Unknown statement key ${order.statement_key}`);
             return;
         }
-        filePath = path.join(__dirname, `../../test/data/mina_account/proof_account.bin`);
-        const proof = [fs.readFileSync(filePath, 'utf-8')];
+        // filePath = path.join(__dirname, `../../test/data/mina_account/proof_account.bin`);
+        // const proof = [fs.readFileSync(filePath, 'utf-8')];
 
         const id = parseInt(order.eth_id);
         const proof_key = order.proof_key;
@@ -77,9 +77,9 @@ async function closeOrder(contract, relayer, order) {
         }
 
         // TODO: fetch original proof
-        // let response = await getAuthenticated(`${constants.serviceUrl}/proof/${proof_key}`);
+        let response = await getAuthenticated(`${constants.serviceUrl}/proof/${proof_key}`);
         console.log('Fetched proof');
-        // const proof = [response.data.proof];
+        const proof = [response.data.proof];
         const price = ethers.utils.parseUnits(order.cost.toString(), 18);
         console.log('Closing order', id, 'with proof', proof_key, 'and price', price.toString(), '...');
 
