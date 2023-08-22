@@ -20,19 +20,23 @@ async function processOrderCreatedEvent(event) {
     let input;
     if (statement_key === '79169223') {
         // Mina account path
-        input = [{array:publicInputs[0].map(item => BigInt(item))}];
+        // TODO: String or BigInt?
+        input = [{array:publicInputs[0].map(item => String(item))}];
     } else if (statement_key === '32292') {
         // Mina state
         input = publicInputs[0].map(item => BigInt(item));
-        input = [convertFromUint256(minaStateExampleJson, input)];
+        input = convertFromUint256(minaStateExampleJson, input);
     } else if (statement_key === '32326') {
         // Unified addition
-        // TODO: extract 2 uints into desired format
-        console.log('unified addition input');
+        input = [
+            {field: String(publicInputs[0][0])},
+            {field: String(publicInputs[0][1])}
+        ];
     } else {
         console.error('Unknown statement key:', statement_key);
     }
     console.log('input', input)
+    fs.writeFileSync('input.json', JSON.stringify(input, null, 4));
         
     const order = {
         cost: Number(hre.ethers.utils.formatUnits(price)),

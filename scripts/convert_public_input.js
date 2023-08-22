@@ -15,7 +15,6 @@ function isHash(value) {
 }
 
 function isIntegerString(value) {
-    // value is a string that represents an integer, e.g. "123" or "-123"
     return typeof value === "string" && !value.startsWith("0x") && !isNaN(Number(value));
 }
 
@@ -73,8 +72,10 @@ function convertFromUint256(node, uint256Values) {
             }
             return base58.encode(buffer);
         } else if (isIntegerString(node)) {
+            // console.log('uint256Values', uint256Values)
             const signBit = uint256Values.shift();
             const num = uint256Values.shift();
+            console.log(num, signBit);
             return signBit === 1 ? String(-num) : String(num);
         } else if (typeof node === "boolean") {
             return Boolean(uint256Values.shift());
