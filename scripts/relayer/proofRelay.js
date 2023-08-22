@@ -66,7 +66,7 @@ async function closeOrder(contract, relayer, order) {
             console.error(`Unknown statement key ${order.statement_key}`);
             return;
         }
-        // filePath = path.join(__dirname, `../../test/data/mina_account/proof_account.bin`);
+        filePath = path.join(__dirname, `../../test/data/mina_account/proof_account.bin`);
         // const proof = [fs.readFileSync(filePath, 'utf-8')];
 
         const id = parseInt(order.eth_id);
@@ -76,13 +76,12 @@ async function closeOrder(contract, relayer, order) {
             throw new Error(`Invalid order ID: ${order.eth_id}`);
         }
 
-        // TODO: fetch original proof
         let response = await getAuthenticated(`${constants.serviceUrl}/proof/${proof_key}`);
         console.log('Fetched proof');
         const proof = [response.data.proof];
         const price = ethers.utils.parseUnits(order.cost.toString(), 18);
         console.log('Closing order', id, 'with proof', proof_key, 'and price', price.toString(), '...');
-
+        console.log(proof);
 
         return contract.connect(relayer).closeOrder(id, proof, price, {gasLimit: 30500000})
         .catch((error) => {
@@ -102,8 +101,9 @@ async function setProducer(contract, relayer, order) {
         const producerName = response.data.sender;
 
         response = await getAuthenticated(`${constants.serviceUrl}/producer/${producerName}`);
-        const producerAddress = response.data.eth_address;
-        if (producerAddress === null) {
+        let producerAddress = response.data.eth_address;
+        if (producerAddress === null || !producerAddress.startsWith('0x') || producerAddress.length !== 42) {
+            console.log(`Producer ${producerName} has no address. Using relayer address...`);
             producerAddress = relayer.address;
         }
         console.log('Setting producer', producerAddress, 'for order', id, '...');

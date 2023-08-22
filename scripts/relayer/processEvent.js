@@ -45,7 +45,7 @@ async function processOrderCreatedEvent(event) {
         eth_id: String(id),
     };
     console.log('Submitting order:', order);
-    return;
+
     try {
         const url = `${constants.serviceUrl}/request`;
         const response = await axios.post(url, order, {

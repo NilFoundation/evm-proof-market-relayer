@@ -1,4 +1,4 @@
 {
-    "serviceUrl": "https://api.proof-market.dev.nil.foundation/_db/market/v0_0",
-    "cursorUrl": "https://api.proof-market.dev.nil.foundation/_db/market/_api/cursor"
+    "serviceUrl": "https://api.proof.market.nil.foundation/_db/market/v0_0",
+    "cursorUrl": "https://api.proof.market.nil.foundation/_db/market/_api/cursor"
 }

@@ -31,10 +31,7 @@
 
 
 ## Testing
-
-There is a testing dbms instance running on https://api.proof-market.dev.nil.foundation/.
-Also we have a running proof producer for testing EVM Proof Market.
-So the following steps can be used to test the contract and the relayer:
+General testing steps (for details see below):
 
 1. Start a local node:
 ```
@@ -73,25 +70,33 @@ Since there will be several people testing this thing, using the same instance o
     - At least add a validation
 3. Make sure that invalid proof does not brake the workflow
 4. Make sure that some random exception allows seamless re-launch
+5. Now orders with the same input are not processed properly
 
 
-# Steps:
-1. After deployment update `deployed_addresses.json`
+# Testing steps:
+1. After Proof Market deployment update `deployed_addresses.json`
 2. Set in `.env` file credentials:
 ```
 INFURA_API_KEY="your infura api key"
 OWNER_PRIVATE_KEY="owner private key"
 RELAYER_PRIVATE_KEY="relayer private key"
-SERVICE_URL="https://api.proof-market.dev.nil.foundation/_db/market/v0_0"
 USERNAME="relayer username on proof marker"
 PASSWORD="relayer password on proof marker"
 ```
-3. Run scripts:
+
+If testing on local network, then it will be sufficient to use the following:
 ```
-npx hardhat run scripts/relayer/orderRelay.js --network sepolia
-```
-```
-npx hardhat run scripts/relayer/proofRelay.js --network sepolia
+USERNAME="your username"
+PASSWORD="your password"
 ```
 
-Or just run `npx hardhat run scripts/relayer/run.js --network sepolia` to run both scripts
+3. Run scripts:
+```
+npx hardhat run scripts/relayer/orderRelay.js --network localhost
+```
+```
+npx hardhat run scripts/relayer/proofRelay.js --network localhost
+```
+
+<!-- Or just run `npx hardhat run scripts/relayer/run.js --network sepolia` to run both scripts. -->
+<!-- Note: in that case logs will be mixed and really hard to read. -->
