@@ -1,3 +1,8 @@
+/**
+ * Module to relay prices related to specific statements.
+ * @module relayPrices
+ */
+
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -7,6 +12,16 @@ const credentials = JSON.parse(fs.readFileSync(path.join(__dirname, 'credentials
 const constants = JSON.parse(fs.readFileSync(path.join(__dirname, 'constants.json'), 'utf-8'));
 
 const validStatementIds = ['32326'];
+
+/**
+ * Relays prices for valid statements to the contract.
+ * The prices are retrieved from the Proof Market.
+ * Right now, the whole order book prices are relayed.
+ * @async
+ * @function
+ * @param {Object} contract - The contract instance.
+ * @param {Object} relayer - The relayer signer.
+ */
 
 async function relayPrices(contract, relayer) {
     try {

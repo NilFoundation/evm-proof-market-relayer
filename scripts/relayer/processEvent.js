@@ -1,3 +1,8 @@
+/**
+ * Module to process specific contract events related to orders.
+ * @module processEvent
+ */
+
 require('dotenv').config();
 
 const axios = require('axios');
@@ -11,6 +16,12 @@ const constants = JSON.parse(fs.readFileSync(path.join(__dirname, 'constants.jso
 const examplePath = path.join(__dirname, '../data/example-mina-state.json');
 const minaStateExampleJson = JSON.parse(fs.readFileSync(examplePath, 'utf-8'));
 
+/**
+ * Processes the `OrderCreated` event, constructs the order input, and submits the order to the Proof Market.
+ * @async
+ * @function
+ * @param {Object} event - The emitted event object.
+ */
 async function processOrderCreatedEvent(event) {
     const { statementId, publicInputs, price } = event.args.orderInput;
     const { id, buyer } = event.args;
@@ -63,12 +74,26 @@ async function processOrderCreatedEvent(event) {
     }
 }
 
+/**
+ * Processes the `OrderClosed` event.
+ * Necessary to keep track of validation errors.
+ * @async
+ * @function
+ * @param {Object} event - The emitted event object.
+ */
 async function processOrderClosedEvent(event) {
     const orderId = event.args.id;
     console.log('Order closed:', orderId);
     // await updateOrderStatus(orderId, 'closed');
 }
 
+/**
+ * Updates the status of a specific order.
+ * @async
+ * @function
+ * @param {string|number} orderId - The ID of the order to update.
+ * @param {string} status - The new status for the order.
+ */
 async function updateOrderStatus(orderId, status) {
     try {
         const url = `${constants.cursorUrl}`;

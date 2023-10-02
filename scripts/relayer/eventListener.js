@@ -1,9 +1,20 @@
+/**
+ * Provides functionality to set up event listeners for contract events.
+ * @module eventListener
+ */
+
 const hre = require('hardhat');
 const fs = require('fs');
 const path = require('path');
 
 const blockNumberFilePath = path.join(__dirname, 'lastProcessedBlock.json');
 
+/**
+ * Retrieves the last processed block number from a file.
+ * @async
+ * @function
+ * @returns {number} The last processed block number.
+ */
 async function getLastProcessedBlock() {
     try {
         if (!fs.existsSync(blockNumberFilePath)) {
@@ -18,6 +29,12 @@ async function getLastProcessedBlock() {
     }
 }
 
+/**
+ * Saves the given block number as the last processed block.
+ * @async
+ * @function
+ * @param {number} blockNumber - The block number to save.
+ */
 async function saveLastProcessedBlock(blockNumber) {
     try {
         fs.writeFileSync(blockNumberFilePath, String(blockNumber));
@@ -26,6 +43,14 @@ async function saveLastProcessedBlock(blockNumber) {
     }
 }
 
+/**
+ * Sets up event listeners for the specified contract events.
+ * @async
+ * @function
+ * @param {Array.<{eventName: string, processEventFunc: function}>} eventProcessingDescriptors - Descriptors for event processing.
+ * @param {string} contractAddress - Address of the contract.
+ * @param {Array} contractABI - ABI of the contract.
+ */
 async function setupEventListener(eventProcessingDescriptors, contractAddress, contractABI) {
     const provider = hre.ethers.provider;
     const contract = new hre.ethers.Contract(contractAddress, contractABI, provider);
@@ -39,7 +64,9 @@ async function setupEventListener(eventProcessingDescriptors, contractAddress, c
         if (blockNumber <= lastProcessedBlock) return;
 
         for (let descriptor of eventProcessingDescriptors) {
+            console.log(`Fetching ${descriptor.eventName} events from block ${lastProcessedBlock + 1} to ${blockNumber}...`);
             const events = await contract.queryFilter(descriptor.eventName, lastProcessedBlock + 1, blockNumber);
+            console.log(`Processing ${events.length} ${descriptor.eventName} events...`)
 
             for (let event of events) {
                 await descriptor.processEventFunc(event);
@@ -58,6 +85,14 @@ async function setupEventListener(eventProcessingDescriptors, contractAddress, c
     console.log('Total listeners:', provider.listenerCount('block'));
 }
 
+/**
+ * Handles connection errors by attempting to reconnect.
+ * @async
+ * @function
+ * @param {Array.<{eventName: string, processEventFunc: function}>} eventProcessingDescriptors - Descriptors for event processing.
+ * @param {string} contractAddress - Address of the contract.
+ * @param {Array} contractABI - ABI of the contract.
+ */
 async function handleConnectionError(eventProcessDescriptors, contractAddress, contractABI) {
     const provider = hre.ethers.provider;
     const waitTime = 10 * 1000; // 10 seconds

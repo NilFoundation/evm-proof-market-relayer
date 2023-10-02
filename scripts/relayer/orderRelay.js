@@ -1,3 +1,8 @@
+/**
+ * Sets up event listeners for specific contract events, processes them and sends them to the Proof Market.
+ * @module orderRelay
+ */
+
 const hre = require('hardhat');
 const fs = require('fs');
 const setupEventListener = require('./eventListener');
