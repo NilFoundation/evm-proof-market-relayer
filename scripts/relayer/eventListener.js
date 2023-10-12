@@ -52,6 +52,8 @@ async function saveLastProcessedBlock(blockNumber) {
  * @param {Array} contractABI - ABI of the contract.
  */
 async function setupEventListener(eventProcessingDescriptors, contractAddress, contractABI) {
+    let isProcessing = false;
+
     const provider = hre.ethers.provider;
     const contract = new hre.ethers.Contract(contractAddress, contractABI, provider);
 
@@ -61,20 +63,28 @@ async function setupEventListener(eventProcessingDescriptors, contractAddress, c
     console.log(`Connected to ${network.name} network`);
 
     provider.on('block', async (blockNumber) => {
-        if (blockNumber <= lastProcessedBlock) return;
+        if (blockNumber <= lastProcessedBlock || isProcessing) return;
 
-        for (let descriptor of eventProcessingDescriptors) {
-            console.log(`Fetching ${descriptor.eventName} events from block ${lastProcessedBlock + 1} to ${blockNumber}...`);
-            const events = await contract.queryFilter(descriptor.eventName, lastProcessedBlock + 1, blockNumber);
-            console.log(`Processing ${events.length} ${descriptor.eventName} events...`)
+        isProcessing = true;
 
-            for (let event of events) {
-                await descriptor.processEventFunc(event);
+        try {
+            for (let descriptor of eventProcessingDescriptors) {
+                console.log(`Fetching ${descriptor.eventName} events from block ${lastProcessedBlock + 1} to ${blockNumber}...`);
+                const events = await contract.queryFilter(descriptor.eventName, lastProcessedBlock + 1, blockNumber);
+                console.log(`Processing ${events.length} ${descriptor.eventName} events...`);
+
+                for (let event of events) {
+                    await descriptor.processEventFunc(event);
+                }
             }
-        }
 
-        lastProcessedBlock = blockNumber;
-        await saveLastProcessedBlock(lastProcessedBlock);
+            lastProcessedBlock = blockNumber;
+            await saveLastProcessedBlock(lastProcessedBlock);
+        } catch (error) {
+            console.error('Error processing block:', error);
+        } finally {
+            isProcessing = false;
+        }
     });
 
     provider.on('error', async (error) => {

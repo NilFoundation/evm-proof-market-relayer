@@ -137,9 +137,17 @@ async function closeOrder(contract, relayer, order) {
 async function setProducer(contract, relayer, order) {
     try {
         const id = parseInt(order.eth_id);
-        const proposal_key = order.proposal_key;
-        let response = await getAuthenticated(`${constants.serviceUrl}/proposal/${proposal_key}`);
-        const producerName = response.data.sender;
+        let producerName = '';
+        if (order.proposal_key === undefined) {
+            console.log(`Order ${id} has already been finished.`);
+            const proof_key = order.proof_key;
+            const response = await getAuthenticated(`${constants.serviceUrl}/proof/${proof_key}`);
+            producerName = response.data.sender;
+        } else {
+            const proposal_key = order.proposal_key;
+            let response = await getAuthenticated(`${constants.serviceUrl}/proposal/${proposal_key}`);
+            producerName = response.data.sender;
+        }
 
         response = await getAuthenticated(`${constants.serviceUrl}/producer/${producerName}`);
         let producerAddress = response.data.eth_address;
