@@ -1,29 +1,53 @@
+/**
+ * Module to process specific contract events related to orders.
+ * @module processEvent
+ */
+
 require('dotenv').config();
 
 const axios = require('axios');
 const hre = require('hardhat');
 const path = require('path');
 const fs = require('fs');
+const { convertFromUint256 } = require('../convert_public_input.js');
 
 const constants = JSON.parse(fs.readFileSync(path.join(__dirname, 'constants.json'), 'utf-8'));
 
+const examplePath = path.join(__dirname, '../data/example-mina-state.json');
+const minaStateExampleJson = JSON.parse(fs.readFileSync(examplePath, 'utf-8'));
+
+/**
+ * Processes the `OrderCreated` event, constructs the order input, and submits the order to the Proof Market.
+ * @async
+ * @function
+ * @param {Object} event - The emitted event object.
+ */
 async function processOrderCreatedEvent(event) {
     const { statementId, publicInputs, price } = event.args.orderInput;
     const { id, buyer } = event.args;
-    console.log('Order created:', id, statementId, publicInputs, price, buyer);
+    console.log('Order created:', id, statementId, price, buyer);
 
     const statement_key = String(statementId);
     let input;
     if (statement_key === '79169223') {
-        input = {array:publicInputs[0]}
+        // Mina account path
+        // TODO: String or BigInt?
+        input = [{array:publicInputs[0].map(item => String(item))}];
     } else if (statement_key === '32292') {
-        // TODO: change this to an original public input
-        const inputFile = path.join(__dirname, '../../test/data/mina_state_pm_input.json');
-        input = JSON.parse(fs.readFileSync(inputFile, 'utf-8'));
+        // Mina state
+        input = publicInputs[0].map(item => BigInt(item));
+        input = convertFromUint256(minaStateExampleJson, input);
+    } else if (statement_key === '32326') {
+        // Unified addition
+        input = [
+            {field: String(publicInputs[0][0])},
+            {field: String(publicInputs[0][1])}
+        ];
     } else {
         console.error('Unknown statement key:', statement_key);
     }
     console.log('input', input)
+    fs.writeFileSync('input.json', JSON.stringify(input, null, 4));
         
     const order = {
         cost: Number(hre.ethers.utils.formatUnits(price)),
@@ -50,12 +74,26 @@ async function processOrderCreatedEvent(event) {
     }
 }
 
+/**
+ * Processes the `OrderClosed` event.
+ * Necessary to keep track of validation errors.
+ * @async
+ * @function
+ * @param {Object} event - The emitted event object.
+ */
 async function processOrderClosedEvent(event) {
     const orderId = event.args.id;
     console.log('Order closed:', orderId);
     // await updateOrderStatus(orderId, 'closed');
 }
 
+/**
+ * Updates the status of a specific order.
+ * @async
+ * @function
+ * @param {string|number} orderId - The ID of the order to update.
+ * @param {string} status - The new status for the order.
+ */
 async function updateOrderStatus(orderId, status) {
     try {
         const url = `${constants.cursorUrl}`;

@@ -1,5 +1,9 @@
-require('dotenv').config();
+/**
+ * Module to relay proofs and statuses related to orders.
+ * @module relayProofsAndStatuses
+ */
 
+require('dotenv').config();
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -11,6 +15,13 @@ function readJSONFile(filePath) {
     return JSON.parse(fs.readFileSync(path.join(__dirname, filePath), 'utf-8'));
 }
 
+/**
+ * Sends an authenticated GET request to a given URL.
+ * @async
+ * @function
+ * @param {string} url - The URL to send the GET request to.
+ * @returns {Object} Axios response object.
+ */
 async function getAuthenticated(url) {
     return await axios.get(url, {
         auth: {
@@ -20,6 +31,13 @@ async function getAuthenticated(url) {
     });
 }
 
+/**
+ * Retrieves the last processed timestamp of an order on Proof Market for a given status.
+ * @async
+ * @function
+ * @param {string} status - The status to retrieve the timestamp for.
+ * @returns {number} The last processed timestamp.
+ */
 async function getLastProcessedTimestamp(status) {
     const filePath = path.join(__dirname, `${status}_lastTimestamp.json`);
 
@@ -37,6 +55,13 @@ async function getLastProcessedTimestamp(status) {
     }
 }
 
+/**
+ * Saves the last processed timestamp of an order on Proof Market for a given status.
+ * @async
+ * @function
+ * @param {string} status - The status to save the timestamp for.
+ * @param {number} timestamp - The timestamp to save.
+ */
 async function saveLastProcessedTimestamp(status, timestamp) {
     try {
         fs.writeFileSync(path.join(__dirname, `${status}_lastTimestamp.json`), String(timestamp));
@@ -45,6 +70,14 @@ async function saveLastProcessedTimestamp(status, timestamp) {
     }
 }
 
+/**
+ * Closes an order on the contract.
+ * @async
+ * @function
+ * @param {Object} contract - The contract instance.
+ * @param {Object} relayer - The relayer signer.
+ * @param {Object} order - The order details.
+ */
 async function closeOrder(contract, relayer, order) {
     try{
         // TODO: relay statuses independently
@@ -67,7 +100,7 @@ async function closeOrder(contract, relayer, order) {
             return;
         }
         filePath = path.join(__dirname, `../../test/data/mina_account/proof_account.bin`);
-        const proof = [fs.readFileSync(filePath, 'utf-8')];
+        // const proof = [fs.readFileSync(filePath, 'utf-8')];
 
         const id = parseInt(order.eth_id);
         const proof_key = order.proof_key;
@@ -76,13 +109,12 @@ async function closeOrder(contract, relayer, order) {
             throw new Error(`Invalid order ID: ${order.eth_id}`);
         }
 
-        // TODO: fetch original proof
-        // let response = await getAuthenticated(`${constants.serviceUrl}/proof/${proof_key}`);
+        let response = await getAuthenticated(`${constants.serviceUrl}/proof/${proof_key}`);
         console.log('Fetched proof');
-        // const proof = [response.data.proof];
+        const proof = [response.data.proof];
         const price = ethers.utils.parseUnits(order.cost.toString(), 18);
         console.log('Closing order', id, 'with proof', proof_key, 'and price', price.toString(), '...');
-
+        console.log(proof);
 
         return contract.connect(relayer).closeOrder(id, proof, price, {gasLimit: 30500000})
         .catch((error) => {
@@ -94,6 +126,14 @@ async function closeOrder(contract, relayer, order) {
     }
 }
 
+/**
+ * Sets the producer for an order.
+ * @async
+ * @function
+ * @param {Object} contract - The contract instance.
+ * @param {Object} relayer - The relayer signer.
+ * @param {Object} order - The order details.
+ */
 async function setProducer(contract, relayer, order) {
     try {
         const id = parseInt(order.eth_id);
@@ -102,8 +142,9 @@ async function setProducer(contract, relayer, order) {
         const producerName = response.data.sender;
 
         response = await getAuthenticated(`${constants.serviceUrl}/producer/${producerName}`);
-        const producerAddress = response.data.eth_address;
-        if (producerAddress === null) {
+        let producerAddress = response.data.eth_address;
+        if (producerAddress === null || !producerAddress.startsWith('0x') || producerAddress.length !== 42) {
+            console.log(`Producer ${producerName} has no address. Using relayer address...`);
             producerAddress = relayer.address;
         }
         console.log('Setting producer', producerAddress, 'for order', id, '...');
@@ -114,6 +155,15 @@ async function setProducer(contract, relayer, order) {
     }
 }
 
+/**
+ * Relays a proof for order:
+ * 1. Fetches the order from the Proof Market since the last processed timestamp.
+ * 2. Closes the order on the contract, by sending the proof and the final price.
+ * @async
+ * @function
+ * @param {Object} contract - The contract instance.
+ * @param {Object} relayer - The relayer signer.
+ */
 async function relayProofs(contract, relayer) {
     try {
         const lastTimestamp = await getLastProcessedTimestamp('completed');
