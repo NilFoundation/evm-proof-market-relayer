@@ -1,10 +1,11 @@
 #!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Define paths to the repositories
-CONTRACT_REPO_PATH="/Users/vitaly/Code/evm-proof-market"
-RELAYER_REPO_PATH="/Users/vitaly/Code/evm-proof-market-relayer"
-MINA_STATE_PROOF_REPO_PATH="/Users/vitaly/Code/mina-state-proof"
-TOOLCHAIN_REPO_PATH="/Users/vitaly/Code/proof-market-toolchain"
+# Paths to the repositories relative to the script's location
+RELAYER_REPO_PATH="$DIR/../../evm-proof-market-relayer"
+TOOLCHAIN_REPO_PATH="$DIR/../../proof-market-toolchain"
+CONTRACT_REPO_PATH="$DIR/../../evm-proof-market"
+MINA_STATE_PROOF_REPO_PATH="$DIR/../../mina-state-proof"
 
 # Variables
 privateKey=${PRIVATE_KEY:-"0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"}
@@ -12,6 +13,7 @@ password=${PASSWORD:-"123"}
 
 # Navigate to the contract repository
 cd $CONTRACT_REPO_PATH
+ls -la
 
 # Compile contracts
 npx hardhat compile
@@ -52,7 +54,6 @@ cp ./deployed_addresses.json $RELAYER_REPO_PATH/deployed_addresses.json
 cd $MINA_STATE_PROOF_REPO_PATH
 npx hardhat compile
 npx hardhat deploy --network localhost --reset
-
 
 # Generate a random string for uniqueness
 RANDOM_STRING=$(openssl rand -hex 12)

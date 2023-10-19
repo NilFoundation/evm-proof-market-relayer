@@ -1,3 +1,8 @@
+## Dependencies
+- openssl
+- [Hardhat](https://hardhat.org/)
+- [nodejs](https://nodejs.org/en/) >= 16.0
+
 ## Current implementation
 1. `eventListener.js` - listens to and process specified events from the contract
     - Currently we are listening to only `OrderCreated` events
