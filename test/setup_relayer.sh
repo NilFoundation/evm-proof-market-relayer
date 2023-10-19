@@ -1,9 +1,9 @@
 #!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Define paths to the repositories
-CONTRACT_REPO_PATH="/Users/vitaly/Code/evm-proof-market"
-RELAYER_REPO_PATH="/Users/vitaly/Code/evm-proof-market-relayer"
-TOOLCHAIN_REPO_PATH="/Users/vitaly/Code/proof-market-toolchain"
+# Paths to the repositories relative to the script's location
+RELAYER_REPO_PATH="$DIR/../../evm-proof-market-relayer"
+TOOLCHAIN_REPO_PATH="$DIR/../../proof-market-toolchain"
 
 # Generate a random string for uniqueness
 RANDOM_STRING=$(openssl rand -hex 12)
