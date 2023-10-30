@@ -79,8 +79,8 @@ async function saveLastProcessedTimestamp(status, timestamp) {
  * @param {Object} order - The order details.
  */
 async function closeOrder(contract, relayer, order) {
+    // TODO: relay statuses independently
     try{
-        // TODO: relay statuses independently
         await setProducer(contract, relayer, order);
     } catch (error) {
         if (error.message.includes("Order is not open")) {
@@ -137,9 +137,18 @@ async function closeOrder(contract, relayer, order) {
 async function setProducer(contract, relayer, order) {
     try {
         const id = parseInt(order.eth_id);
-        const proposal_key = order.proposal_key;
-        let response = await getAuthenticated(`${constants.serviceUrl}/proposal/${proposal_key}`);
-        const producerName = response.data.sender;
+        let producerName = '';
+        let url;
+        if (order.proposal_key === undefined) {
+            console.log(`Order ${id} has already been finished.`);
+            const proof_key = order.proof_key;
+            url = `${constants.serviceUrl}/proof/${proof_key}`;
+        } else {
+            const proposal_key = order.proposal_key;
+            url = `${constants.serviceUrl}/proposal/${proposal_key}`;
+        }
+        let response = await getAuthenticated(url);
+        producerName = response.data.sender;
 
         response = await getAuthenticated(`${constants.serviceUrl}/producer/${producerName}`);
         let producerAddress = response.data.eth_address;

@@ -1,5 +1,5 @@
 {
-  "name": "proof-market-endpoint",
+  "name": "evm-proof-market-relayer",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@nomiclabs/hardhat-ethers": "^2.2.2",
@@ -7,7 +7,7 @@
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
-    "hardhat": "^2.13.0",
+    "hardhat": "^2.17.4",
     "install": "^0.13.0",
     "npm": "^9.6.4"
   },
